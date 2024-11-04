@@ -82,15 +82,15 @@ int main()
         switch (ch)
         {
         case '1':
-            encrypt_file(source_file, encryption_file);
-            printf("The sourcefile has been encrypted and saved at %s\n", encryption_file);
+            encrypt_file(source_file, decryption_file);
+            printf("The sourcefile has been encrypted and saved at %s\n", decryption_file);
             break;
         case '2':
-            decrypt_file(encryption_file, decryption_file);
-            printf("The sourcefile has been decrypted and saved at %s\n", decryption_file);
+            decrypt_file(decryption_file, encryption_file);
+            printf("The sourcefile has been decrypted and saved at %s\n", encryption_file);
             break;
         case '3':
-            if (compare_files(source_file, decryption_file))
+            if (compare_files(source_file, encryption_file))
             {
                 printf("Verification Success!\n");
             }
