@@ -81,6 +81,8 @@ typedef struct Pipe_State {
     int multiplier_stall; /* number of remaining cycles until HI/LO are ready */
 
     /* place other information here as necessary */
+    int inst_cache_miss_stall; /* number of cycles to stall for an instruction cache miss */
+    int data_cache_miss_stall; /* number of cycles to stall for a data cache miss */
 
 } Pipe_State;
 

@@ -1,6 +1,7 @@
 #include "pipe.h"
 #include "shell.h"
 #include "mips.h"
+#include "cache.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -128,6 +129,12 @@ void pipe_stage_wb()
 
 void pipe_stage_mem()
 {
+    /* if there is a data cache miss, stall */
+    if (pipe.data_cache_miss_stall > 1) {
+        pipe.data_cache_miss_stall--;
+        return;
+    }
+
     /* if there is no instruction in this pipeline stage, we are done */
     if (!pipe.mem_op)
         return;
@@ -136,8 +143,20 @@ void pipe_stage_mem()
     Pipe_Op *op = pipe.mem_op;
 
     uint32_t val = 0;
-    if (op->is_mem)
-        val = mem_read_32(op->mem_addr & ~3);
+    if (op->is_mem) {
+        if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+            if (pipe.data_cache_miss_stall == 1) {
+                pipe.data_cache_miss_stall = 0;
+            }
+            else {
+                /* cache miss */
+                pipe.data_cache_miss_stall = 51;
+                return;
+            }
+        }
+        val = data_cache_read(op->mem_addr & ~3);
+    }
+    // val = mem_read_32(op->mem_addr & ~3);
 
     switch (op->opcode) {
         case OP_LW:
@@ -194,7 +213,19 @@ void pipe_stage_mem()
                 case 3: val = (val & 0x00FFFFFF) | ((op->mem_value & 0xFF) << 24); break;
             }
 
-            mem_write_32(op->mem_addr & ~3, val);
+            if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+                if (pipe.data_cache_miss_stall == 1) {
+                    pipe.data_cache_miss_stall = 0;
+                }
+                else {
+                    /* cache miss */
+                    pipe.data_cache_miss_stall = 51;
+                    return;
+                }
+            }
+
+            data_cache_write(op->mem_addr & ~3, val);
+            // mem_write_32(op->mem_addr & ~3, val);
             break;
 
         case OP_SH:
@@ -209,12 +240,34 @@ void pipe_stage_mem()
             printf("new word %08x\n", val);
 #endif
 
-            mem_write_32(op->mem_addr & ~3, val);
+            if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+                if (pipe.data_cache_miss_stall == 1) {
+                    pipe.data_cache_miss_stall = 0;
+                }
+                else {
+                    /* cache miss */
+                    pipe.data_cache_miss_stall = 51;
+                    return;
+                }
+            }
+
+            data_cache_write(op->mem_addr & ~3, val);
             break;
 
         case OP_SW:
             val = op->mem_value;
-            mem_write_32(op->mem_addr & ~3, val);
+            if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+                if (pipe.data_cache_miss_stall == 1) {
+                    pipe.data_cache_miss_stall = 0;
+                }
+                else {
+                    /* cache miss */
+                    pipe.data_cache_miss_stall = 51;
+                    return;
+                }
+            }
+
+            data_cache_write(op->mem_addr & ~3, val);
             break;
     }
 
@@ -658,6 +711,12 @@ void pipe_stage_decode()
 
 void pipe_stage_fetch()
 {
+    /* if there is a instruction cache miss, stall */
+    if (pipe.inst_cache_miss_stall > 1) {
+        pipe.inst_cache_miss_stall--;
+        return;
+    }
+
     /* if pipeline is stalled (our output slot is not empty), return */
     if (pipe.decode_op != NULL)
         return;
@@ -667,7 +726,19 @@ void pipe_stage_fetch()
     memset(op, 0, sizeof(Pipe_Op));
     op->reg_src1 = op->reg_src2 = op->reg_dst = -1;
 
-    op->instruction = mem_read_32(pipe.PC);
+    if (inst_cache_hit(pipe.PC) == UINT32_MAX) {
+        if (pipe.inst_cache_miss_stall == 1) {
+            pipe.inst_cache_miss_stall = 0;
+        }
+        else {
+            /* cache miss */
+            pipe.inst_cache_miss_stall = 51;
+            free(op);
+            return;
+        }
+    }
+
+    op->instruction = inst_cache_read(pipe.PC);
     op->pc = pipe.PC;
     pipe.decode_op = op;
 
