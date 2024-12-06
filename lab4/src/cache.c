@@ -202,6 +202,7 @@ void data_cache_write(uint32_t address, uint32_t value)
     }
 
     data_cache.sets[set].blocks[way].lru = 0;
+    data_cache.sets[set].blocks[way].dirty = 1;
 
     data_cache.sets[set].blocks[way].data[offset + 3] = (value >> 24) & 0xFF;
     data_cache.sets[set].blocks[way].data[offset + 2] = (value >> 16) & 0xFF;
