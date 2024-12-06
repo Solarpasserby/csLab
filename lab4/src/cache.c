@@ -16,7 +16,7 @@ void inst_cache_init()
 uint32_t inst_cache_hit(uint32_t address)
 {
     uint32_t set  = (address >> 5) & 0x3F;
-    uint32_t tag  = (address >> 11) & 0x1FF;
+    uint32_t tag  = address >> 11;
 
     for (int i = 0; i < INST_CACHE_WAYS; i++) {
         if (inst_cache.sets[set].blocks[i].valid && inst_cache.sets[set].blocks[i].tag == tag) {
@@ -31,7 +31,7 @@ uint32_t inst_cache_read(uint32_t address)
 {
     uint32_t offset  = address & 0x1F;
     uint32_t set     = (address >> 5) & 0x3F;
-    uint32_t tag     = (address >> 11) & 0x1FF;
+    uint32_t tag     = address >> 11;
 
     uint32_t way = inst_cache_hit(address);
 
@@ -85,7 +85,7 @@ void data_cache_init()
 uint32_t data_cache_hit(uint32_t address)
 {
     uint32_t set = (address >> 5) & 0xFF;
-    uint32_t tag = (address >> 13) & 0x7F;
+    uint32_t tag = address >> 13;
 
     for (int i = 0; i < DATA_CACHE_WAYS; i++) {
         if (data_cache.sets[set].blocks[i].valid && data_cache.sets[set].blocks[i].tag == tag) {
@@ -100,7 +100,7 @@ uint32_t data_cache_read(uint32_t address)
 {
     uint32_t offset  = address & 0x1F;
     uint32_t set     = (address >> 5) & 0xFF;
-    uint32_t tag     = (address >> 13) & 0x7F;
+    uint32_t tag     = address >> 13;
 
     uint32_t way = data_cache_hit(address);
 
@@ -118,7 +118,7 @@ uint32_t data_cache_read(uint32_t address)
 
         if (data_cache.sets[set].blocks[way].dirty) {
             uint32_t old_tag = data_cache.sets[set].blocks[way].tag;
-            uint32_t old_address = (old_tag << 13) | (set << 5) | MEM_DATA_START;
+            uint32_t old_address = (old_tag << 13) | (set << 5);
             for (int i = 0; i < CACHE_BLOCK_SIZE; i += 4) {
                 uint32_t temp_data = 
                     (data_cache.sets[set].blocks[way].data[i + 3] << 24) |
@@ -163,7 +163,7 @@ void data_cache_write(uint32_t address, uint32_t value)
 {
     uint32_t offset  = address & 0x1F;
     uint32_t set     = (address >> 5) & 0xFF;
-    uint32_t tag     = (address >> 13) & 0x7F;
+    uint32_t tag     = address >> 13;
 
     uint32_t way = data_cache_hit(address);
 
@@ -181,7 +181,7 @@ void data_cache_write(uint32_t address, uint32_t value)
 
         if (data_cache.sets[set].blocks[way].dirty) {
             uint32_t old_tag = data_cache.sets[set].blocks[way].tag;
-            uint32_t old_address = (old_tag << 13) | (set << 5) | MEM_DATA_START;
+            uint32_t old_address = (old_tag << 13) | (set << 5);
             for (int i = 0; i < CACHE_BLOCK_SIZE; i+= 4) {
                 uint32_t temp_data = 
                     (data_cache.sets[set].blocks[way].data[i + 3] << 24) |
