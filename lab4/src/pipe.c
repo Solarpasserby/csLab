@@ -731,20 +731,20 @@ void pipe_stage_fetch()
     memset(op, 0, sizeof(Pipe_Op));
     op->reg_src1 = op->reg_src2 = op->reg_dst = -1;
 
-    // if (inst_cache_hit(pipe.PC) == UINT32_MAX) {
-    //     if (pipe.inst_cache_miss_stall == 1) {
-    //         pipe.inst_cache_miss_stall = 0;
-    //     }
-    //     else {
-    //         /* cache miss */
-    //         pipe.inst_cache_miss_stall = 51;
-    //         free(op);
-    //         return;
-    //     }
-    // }
+    if (inst_cache_hit(pipe.PC) == UINT32_MAX) {
+        if (pipe.inst_cache_miss_stall == 1) {
+            pipe.inst_cache_miss_stall = 0;
+        }
+        else {
+            /* cache miss */
+            pipe.inst_cache_miss_stall = 51;
+            free(op);
+            return;
+        }
+    }
 
-    // op->instruction = inst_cache_read(pipe.PC);
-    op->instruction = mem_read_32(pipe.PC);
+    op->instruction = inst_cache_read(pipe.PC);
+    // op->instruction = mem_read_32(pipe.PC);
     op->pc = pipe.PC;
     pipe.decode_op = op;
 

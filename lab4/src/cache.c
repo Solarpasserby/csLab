@@ -44,8 +44,12 @@ uint32_t inst_cache_read(uint32_t address)
         }
 
         address &= ~0x1F;
-        for (int i = 0; i < CACHE_BLOCK_SIZE; i++) {
-            inst_cache.sets[set].blocks[way].data[i] = mem_read_32(address + i);
+        for (int i = 0; i < CACHE_BLOCK_SIZE; i += 4) {
+            uint32_t temp_data = mem_read_32(address + i);
+            inst_cache.sets[set].blocks[way].data[i + 3] = (temp_data >> 24) & 0xFF;
+            inst_cache.sets[set].blocks[way].data[i + 2] = (temp_data >> 16) & 0xFF;
+            inst_cache.sets[set].blocks[way].data[i + 1] = (temp_data >>  8) & 0xFF;
+            inst_cache.sets[set].blocks[way].data[i + 0] = (temp_data >>  0) & 0xFF;
         }
 
         inst_cache.sets[set].blocks[way].tag = tag;
@@ -62,7 +66,11 @@ uint32_t inst_cache_read(uint32_t address)
 
     inst_cache.sets[set].blocks[way].lru = 0;
 
-    return inst_cache.sets[set].blocks[way].data[offset];
+    return 
+        (inst_cache.sets[set].blocks[way].data[offset + 3] << 24) |
+        (inst_cache.sets[set].blocks[way].data[offset + 2] << 16) |
+        (inst_cache.sets[set].blocks[way].data[offset + 1] <<  8) |
+        (inst_cache.sets[set].blocks[way].data[offset + 0] <<  0);
 }
 
 void data_cache_init()
@@ -103,14 +111,23 @@ uint32_t data_cache_read(uint32_t address)
         if (data_cache.sets[set].blocks[way].dirty) {
             uint32_t old_tag = data_cache.sets[set].blocks[way].tag;
             uint32_t old_address = (old_tag << 13) | (set << 5) | MEM_DATA_START;
-            for (int i = 0; i < CACHE_BLOCK_SIZE; i++) {
-                mem_write_32(old_address + i, data_cache.sets[set].blocks[way].data[i]);
+            for (int i = 0; i < CACHE_BLOCK_SIZE; i += 4) {
+                uint32_t temp_data = 
+                    (data_cache.sets[set].blocks[way].data[i + 3] << 24) |
+                    (data_cache.sets[set].blocks[way].data[i + 2] << 16) |
+                    (data_cache.sets[set].blocks[way].data[i + 1] <<  8) |
+                    (data_cache.sets[set].blocks[way].data[i + 0] <<  0);
+                mem_write_32(old_address + i, temp_data);
             }
         }
 
         address &= ~0x1F;
-        for (int i = 0; i < CACHE_BLOCK_SIZE; i++) {
-            data_cache.sets[set].blocks[way].data[i] = mem_read_32(address + i);
+        for (int i = 0; i < CACHE_BLOCK_SIZE; i += 4) {
+            uint32_t temp_data = mem_read_32(address + i);
+            data_cache.sets[set].blocks[way].data[i + 3] = (temp_data >> 24) & 0xFF;
+            data_cache.sets[set].blocks[way].data[i + 2] = (temp_data >> 16) & 0xFF;
+            data_cache.sets[set].blocks[way].data[i + 1] = (temp_data >>  8) & 0xFF;
+            data_cache.sets[set].blocks[way].data[i + 0] = (temp_data >>  0) & 0xFF;
         }
 
         data_cache.sets[set].blocks[way].tag = tag;
@@ -127,7 +144,11 @@ uint32_t data_cache_read(uint32_t address)
 
     data_cache.sets[set].blocks[way].lru = 0;
 
-    return data_cache.sets[set].blocks[way].data[offset];
+    return
+        (data_cache.sets[set].blocks[way].data[offset + 3] << 24) |
+        (data_cache.sets[set].blocks[way].data[offset + 2] << 16) |
+        (data_cache.sets[set].blocks[way].data[offset + 1] <<  8) |
+        (data_cache.sets[set].blocks[way].data[offset + 0] <<  0);
 }
 
 void data_cache_write(uint32_t address, uint32_t value)
@@ -149,14 +170,23 @@ void data_cache_write(uint32_t address, uint32_t value)
         if (data_cache.sets[set].blocks[way].dirty) {
             uint32_t old_tag = data_cache.sets[set].blocks[way].tag;
             uint32_t old_address = (old_tag << 13) | (set << 5) | MEM_DATA_START;
-            for (int i = 0; i < CACHE_BLOCK_SIZE; i++) {
-                mem_write_32(old_address + i, data_cache.sets[set].blocks[way].data[i]);
+            for (int i = 0; i < CACHE_BLOCK_SIZE; i+= 4) {
+                uint32_t temp_data = 
+                    (data_cache.sets[set].blocks[way].data[i + 3] << 24) |
+                    (data_cache.sets[set].blocks[way].data[i + 2] << 16) |
+                    (data_cache.sets[set].blocks[way].data[i + 1] <<  8) |
+                    (data_cache.sets[set].blocks[way].data[i + 0] <<  0);
+                mem_write_32(old_address + i, temp_data);
             }
         }
 
         address &= ~0x1F;
-        for (int i = 0; i < CACHE_BLOCK_SIZE; i++) {
-            data_cache.sets[set].blocks[way].data[i] = mem_read_32(address + i);
+        for (int i = 0; i < CACHE_BLOCK_SIZE; i += 4) {
+            uint32_t temp_data = mem_read_32(address + i);
+            data_cache.sets[set].blocks[way].data[i + 3] = (temp_data >> 24) & 0xFF;
+            data_cache.sets[set].blocks[way].data[i + 2] = (temp_data >> 16) & 0xFF;
+            data_cache.sets[set].blocks[way].data[i + 1] = (temp_data >>  8) & 0xFF;
+            data_cache.sets[set].blocks[way].data[i + 0] = (temp_data >>  0) & 0xFF;
         }
 
         data_cache.sets[set].blocks[way].tag = tag;
@@ -173,5 +203,8 @@ void data_cache_write(uint32_t address, uint32_t value)
 
     data_cache.sets[set].blocks[way].lru = 0;
 
-    data_cache.sets[set].blocks[way].data[offset] = value;
+    data_cache.sets[set].blocks[way].data[offset + 3] = (value >> 24) & 0xFF;
+    data_cache.sets[set].blocks[way].data[offset + 2] = (value >> 16) & 0xFF;
+    data_cache.sets[set].blocks[way].data[offset + 1] = (value >>  8) & 0xFF;
+    data_cache.sets[set].blocks[way].data[offset + 0] = (value >>  0) & 0xFF;
 }
