@@ -9,6 +9,8 @@
 
 //#define DEBUG
 
+#define CACHE_MISS_STALL 51
+
 /* debug */
 void print_op(Pipe_Op *op)
 {
@@ -153,7 +155,7 @@ void pipe_stage_mem()
             }
             else {
                 /* cache miss */
-                pipe.data_cache_miss_stall = 50;
+                pipe.data_cache_miss_stall = CACHE_MISS_STALL;
                 return;
             }
         }
@@ -222,7 +224,7 @@ void pipe_stage_mem()
                 }
                 else {
                     /* cache miss */
-                    pipe.data_cache_miss_stall = 50;
+                    pipe.data_cache_miss_stall = CACHE_MISS_STALL;
                     return;
                 }
             }
@@ -249,7 +251,7 @@ void pipe_stage_mem()
                 }
                 else {
                     /* cache miss */
-                    pipe.data_cache_miss_stall = 50;
+                    pipe.data_cache_miss_stall = CACHE_MISS_STALL;
                     return;
                 }
             }
@@ -266,7 +268,7 @@ void pipe_stage_mem()
                 }
                 else {
                     /* cache miss */
-                    pipe.data_cache_miss_stall = 50;
+                    pipe.data_cache_miss_stall = CACHE_MISS_STALL;
                     return;
                 }
             }
@@ -737,7 +739,7 @@ void pipe_stage_fetch()
         }
         else {
             /* cache miss */
-            pipe.inst_cache_miss_stall = 50;
+            pipe.inst_cache_miss_stall = CACHE_BLOCK_SIZE;
             free(op);
             return;
         }
