@@ -2,6 +2,7 @@
 #include "shell.h"
 #include "pipe.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdint.h>
 
 Inst_Cache inst_cache;

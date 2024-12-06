@@ -28,8 +28,8 @@ void pipe_init()
     memset(&pipe, 0, sizeof(Pipe_State));
     pipe.PC = 0x00400000;
 
-    inst_cache_init();
-    data_cache_init();
+    // inst_cache_init();
+    // data_cache_init();
 }
 
 void pipe_cycle()
@@ -282,8 +282,10 @@ void pipe_stage_mem()
 void pipe_stage_execute()
 {
     /* if a multiply/divide is in progress, decrement cycles until value is ready */
+    /*
     if (pipe.multiplier_stall > 0)
-        pipe.multiplier_stall--;
+        pipe.multiplier_stali--;
+    */
 
     /* if downstream stall, return (and leave any input we had) */
     if (pipe.mem_op != NULL)
