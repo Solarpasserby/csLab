@@ -38,7 +38,11 @@ uint32_t inst_cache_read(uint32_t address)
     if (way == UINT32_MAX) {
         way = 0;
         for (int i = 0; i < INST_CACHE_WAYS; i++) {
-            if (inst_cache.sets[set].blocks[i].valid && inst_cache.sets[set].blocks[i].lru > inst_cache.sets[set].blocks[way].lru) {
+            if (!inst_cache.sets[set].blocks[i].valid) {
+                way = i;
+                break;
+            }
+            else if (inst_cache.sets[set].blocks[i].lru > inst_cache.sets[set].blocks[way].lru) {
                 way = i;
             }
         }
@@ -103,7 +107,11 @@ uint32_t data_cache_read(uint32_t address)
     if (way == UINT32_MAX) {
         way = 0;
         for (int i = 0; i < DATA_CACHE_WAYS; i++) {
-            if (data_cache.sets[set].blocks[i].valid && data_cache.sets[set].blocks[i].lru > data_cache.sets[set].blocks[way].lru) {
+            if (!data_cache.sets[set].blocks[i].valid) {
+                way = i;
+                break;
+            }
+            else if (data_cache.sets[set].blocks[i].lru > data_cache.sets[set].blocks[way].lru) {
                 way = i;
             }
         }
@@ -162,7 +170,11 @@ void data_cache_write(uint32_t address, uint32_t value)
     if (way == UINT32_MAX) {
         way = 0;
         for (int i = 0; i < DATA_CACHE_WAYS; i++) {
-            if (data_cache.sets[set].blocks[i].valid && data_cache.sets[set].blocks[i].lru > data_cache.sets[set].blocks[way].lru) {
+            if (!data_cache.sets[set].blocks[i].valid) {
+                way = i;
+                break;
+            }
+            else if (data_cache.sets[set].blocks[i].lru > data_cache.sets[set].blocks[way].lru) {
                 way = i;
             }
         }

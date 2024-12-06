@@ -156,6 +156,7 @@ void pipe_stage_mem()
             else {
                 /* cache miss */
                 pipe.data_cache_miss_stall = CACHE_MISS_STALL;
+                free(op);
                 return;
             }
         }
