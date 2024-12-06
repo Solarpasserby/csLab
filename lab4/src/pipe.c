@@ -27,6 +27,9 @@ void pipe_init()
 {
     memset(&pipe, 0, sizeof(Pipe_State));
     pipe.PC = 0x00400000;
+
+    inst_cache_init();
+    data_cache_init();
 }
 
 void pipe_cycle()
