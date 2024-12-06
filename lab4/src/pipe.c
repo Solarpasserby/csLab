@@ -133,10 +133,10 @@ void pipe_stage_wb()
 void pipe_stage_mem()
 {
     /* if there is a data cache miss, stall */
-    if (pipe.data_cache_miss_stall > 1) {
-        pipe.data_cache_miss_stall--;
-        return;
-    }
+    // if (pipe.data_cache_miss_stall > 1) {
+    //     pipe.data_cache_miss_stall--;
+    //     return;
+    // }
 
     /* if there is no instruction in this pipeline stage, we are done */
     if (!pipe.mem_op)
@@ -147,19 +147,19 @@ void pipe_stage_mem()
 
     uint32_t val = 0;
     if (op->is_mem) {
-        if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
-            if (pipe.data_cache_miss_stall == 1) {
-                pipe.data_cache_miss_stall = 0;
-            }
-            else {
-                /* cache miss */
-                pipe.data_cache_miss_stall = 51;
-                return;
-            }
-        }
-        val = data_cache_read(op->mem_addr & ~3);
+        // if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+        //     if (pipe.data_cache_miss_stall == 1) {
+        //         pipe.data_cache_miss_stall = 0;
+        //     }
+        //     else {
+        //         /* cache miss */
+        //         pipe.data_cache_miss_stall = 51;
+        //         return;
+        //     }
+        // }
+        // val = data_cache_read(op->mem_addr & ~3);
+        val = mem_read_32(op->mem_addr & ~3);
     }
-    // val = mem_read_32(op->mem_addr & ~3);
 
     switch (op->opcode) {
         case OP_LW:
@@ -216,19 +216,19 @@ void pipe_stage_mem()
                 case 3: val = (val & 0x00FFFFFF) | ((op->mem_value & 0xFF) << 24); break;
             }
 
-            if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
-                if (pipe.data_cache_miss_stall == 1) {
-                    pipe.data_cache_miss_stall = 0;
-                }
-                else {
-                    /* cache miss */
-                    pipe.data_cache_miss_stall = 51;
-                    return;
-                }
-            }
+            // if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+            //     if (pipe.data_cache_miss_stall == 1) {
+            //         pipe.data_cache_miss_stall = 0;
+            //     }
+            //     else {
+            //         /* cache miss */
+            //         pipe.data_cache_miss_stall = 51;
+            //         return;
+            //     }
+            // }
 
-            data_cache_write(op->mem_addr & ~3, val);
-            // mem_write_32(op->mem_addr & ~3, val);
+            // data_cache_write(op->mem_addr & ~3, val);
+            mem_write_32(op->mem_addr & ~3, val);
             break;
 
         case OP_SH:
@@ -243,34 +243,36 @@ void pipe_stage_mem()
             printf("new word %08x\n", val);
 #endif
 
-            if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
-                if (pipe.data_cache_miss_stall == 1) {
-                    pipe.data_cache_miss_stall = 0;
-                }
-                else {
-                    /* cache miss */
-                    pipe.data_cache_miss_stall = 51;
-                    return;
-                }
-            }
+            // if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+            //     if (pipe.data_cache_miss_stall == 1) {
+            //         pipe.data_cache_miss_stall = 0;
+            //     }
+            //     else {
+            //         /* cache miss */
+            //         pipe.data_cache_miss_stall = 51;
+            //         return;
+            //     }
+            // }
 
-            data_cache_write(op->mem_addr & ~3, val);
+            // data_cache_write(op->mem_addr & ~3, val);
+            mem_write_32(op->mem_addr & ~3, val);
             break;
 
         case OP_SW:
             val = op->mem_value;
-            if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
-                if (pipe.data_cache_miss_stall == 1) {
-                    pipe.data_cache_miss_stall = 0;
-                }
-                else {
-                    /* cache miss */
-                    pipe.data_cache_miss_stall = 51;
-                    return;
-                }
-            }
+            // if (data_cache_hit(op->mem_addr) == UINT32_MAX) {
+            //     if (pipe.data_cache_miss_stall == 1) {
+            //         pipe.data_cache_miss_stall = 0;
+            //     }
+            //     else {
+            //         /* cache miss */
+            //         pipe.data_cache_miss_stall = 51;
+            //         return;
+            //     }
+            // }
 
-            data_cache_write(op->mem_addr & ~3, val);
+            // data_cache_write(op->mem_addr & ~3, val);
+            mem_write_32(op->mem_addr & ~3, val);
             break;
     }
 
@@ -282,10 +284,8 @@ void pipe_stage_mem()
 void pipe_stage_execute()
 {
     /* if a multiply/divide is in progress, decrement cycles until value is ready */
-    /*
     if (pipe.multiplier_stall > 0)
-        pipe.multiplier_stali--;
-    */
+        pipe.multiplier_stall--;
 
     /* if downstream stall, return (and leave any input we had) */
     if (pipe.mem_op != NULL)
@@ -717,10 +717,10 @@ void pipe_stage_decode()
 void pipe_stage_fetch()
 {
     /* if there is a instruction cache miss, stall */
-    if (pipe.inst_cache_miss_stall > 1) {
-        pipe.inst_cache_miss_stall--;
-        return;
-    }
+    // if (pipe.inst_cache_miss_stall > 1) {
+    //     pipe.inst_cache_miss_stall--;
+    //     return;
+    // }
 
     /* if pipeline is stalled (our output slot is not empty), return */
     if (pipe.decode_op != NULL)
@@ -731,19 +731,20 @@ void pipe_stage_fetch()
     memset(op, 0, sizeof(Pipe_Op));
     op->reg_src1 = op->reg_src2 = op->reg_dst = -1;
 
-    if (inst_cache_hit(pipe.PC) == UINT32_MAX) {
-        if (pipe.inst_cache_miss_stall == 1) {
-            pipe.inst_cache_miss_stall = 0;
-        }
-        else {
-            /* cache miss */
-            pipe.inst_cache_miss_stall = 51;
-            free(op);
-            return;
-        }
-    }
+    // if (inst_cache_hit(pipe.PC) == UINT32_MAX) {
+    //     if (pipe.inst_cache_miss_stall == 1) {
+    //         pipe.inst_cache_miss_stall = 0;
+    //     }
+    //     else {
+    //         /* cache miss */
+    //         pipe.inst_cache_miss_stall = 51;
+    //         free(op);
+    //         return;
+    //     }
+    // }
 
-    op->instruction = inst_cache_read(pipe.PC);
+    // op->instruction = inst_cache_read(pipe.PC);
+    op->instruction = mem_read_32(pipe.PC);
     op->pc = pipe.PC;
     pipe.decode_op = op;
 
